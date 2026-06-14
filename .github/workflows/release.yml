@@ -92,3 +92,19 @@ jobs:
           # macOS notarization API key
           API_KEY_ID: ${{ secrets.API_KEY_ID }}
           API_KEY_ISSUER_ID: ${{ secrets.API_KEY_ISSUER_ID }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: koodo-reader-${{ matrix.os }}
+          path: |
+            dist/**/*.exe
+            dist/**/*.zip
+            dist/**/*.dmg
+            dist/**/*.AppImage
+            dist/**/*.deb
+            dist/**/*.rpm
+            dist/**/*.snap
+            dist/**/*.blockmap
+            dist/**/*.yml
+          if-no-files-found: warn
