@@ -281,6 +281,8 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           isHyphenation: ConfigService.getReaderConfig("isHyphenation"),
           isStartFromEven: ConfigService.getReaderConfig("isStartFromEven"),
           isAllowScript: ConfigService.getReaderConfig("isAllowScript"),
+          isDisableChapterBreak:
+            ConfigService.getReaderConfig("isDisableChapterBreak"),
           isBionic: ConfigService.getReaderConfig("isBionic"),
           password: getPdfPassword(this.props.currentBook),
           scale: parseFloat(this.props.scale),

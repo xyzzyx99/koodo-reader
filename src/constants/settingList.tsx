@@ -387,6 +387,12 @@ export const readingSettingList = [
   },
   {
     isElectron: false,
+    title: "Turn off page break between chapters",
+    desc: "Show adjacent chapters continuously instead of forcing each chapter to start on a new page",
+    propName: "isDisableChapterBreak",
+  },
+  {
+    isElectron: false,
     title: "Overwrite the default link style in the book",
     propName: "isOverwriteLink",
   },

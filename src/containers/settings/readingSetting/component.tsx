@@ -42,6 +42,8 @@ class ReadingSetting extends React.Component<
         ConfigService.getReaderConfig("isOverwriteText") === "yes",
       isOverwriteLink:
         ConfigService.getReaderConfig("isOverwriteLink") === "yes",
+      isDisableChapterBreak:
+        ConfigService.getReaderConfig("isDisableChapterBreak") === "yes",
     };
   }
 
