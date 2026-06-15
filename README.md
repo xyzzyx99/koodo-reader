@@ -1,6 +1,6 @@
 <div align="left">
 
-[简体中文](https://github.com/koodo-reader/koodo-reader/blob/master/README_cn.md) | [हिंदी](https://github.com/koodo-reader/koodo-reader/blob/master/README_hi.md)
+[简体外文](https://github.com/koodo-reader/koodo-reader/blob/master/README_cn.md) | [हिंदी](https://github.com/koodo-reader/koodo-reader/blob/master/README_hi.md)
 |[Português](https://github.com/koodo-reader/koodo-reader/blob/master/README_pt.md) | [Indonesian](https://github.com/koodo-reader/koodo-reader/blob/master/README_id.md) | English
 
 </div>
@@ -225,3 +225,7 @@ Make sure that you have installed yarn and git
 1. If you can't find your target language from the above list, download the English source file from [this link](./src/assets/locales/en.json).
 
 2. When you're finished translating, submit the source file to [this link](https://github.com/koodo-reader/koodo-reader/issues/new?assignees=&labels=submit+translation&projects=&template=submit_translation.yml). Pull requests are also welcome.
+
+## Fork features
+
+* Setting to turn on/off chapter page break
