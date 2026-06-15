@@ -62,6 +62,20 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           },
         }
   );
+  private disableChapterBreakBeforeSetting =
+    ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
+
+  private reloadReaderForChapterBreakSetting = () => {
+    if (this.props.currentBook?.key && this.props.renderBookFunc) {
+      this.props.renderBookFunc();
+    }
+  };
+
+  private handleChapterBreakSettingStorage = (event: StorageEvent) => {
+    if (event.key === "koodo-disable-chapter-break-changed-at") {
+      this.reloadReaderForChapterBreakSetting();
+    }
+  };
   constructor(props: ReaderProps) {
     super(props);
     this.state = {
@@ -108,6 +122,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         isMouseMoving = false;
       }, 100);
     });
+    window.addEventListener("storage", this.handleChapterBreakSettingStorage);
   }
   async UNSAFE_componentWillMount() {
     let url = document.location.href;
@@ -149,7 +164,33 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     });
   }
 
+  componentDidUpdate(prevProps: ReaderProps) {
+    if (!prevProps.isSettingOpen && this.props.isSettingOpen) {
+      this.disableChapterBreakBeforeSetting =
+        ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
+    }
+
+    if (prevProps.isSettingOpen && !this.props.isSettingOpen) {
+      const disableChapterBreakAfterSetting =
+        ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
+      if (
+        disableChapterBreakAfterSetting !==
+        this.disableChapterBreakBeforeSetting
+      ) {
+        this.reloadReaderForChapterBreakSetting();
+        localStorage.setItem(
+          "koodo-disable-chapter-break-changed-at",
+          Date.now().toString()
+        );
+      }
+    }
+  }
+
   componentWillUnmount() {
+    window.removeEventListener(
+      "storage",
+      this.handleChapterBreakSettingStorage
+    );
     if (isElectron) {
       clearDiscordPresence();
     }
