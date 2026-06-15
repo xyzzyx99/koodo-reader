@@ -16,11 +16,14 @@ import ChapterSetting from "../../../containers/settings/chapterSetting";
 import DictSetting from "../../../containers/settings/dictSetting";
 import MoreSetting from "../../../containers/settings/moreSetting";
 import { isElectron } from "react-device-detect";
+import { ConfigService } from "../../../assets/lib/kookit-extra-browser.min";
 class SettingDialog extends React.Component<
   SettingInfoProps,
   SettingInfoState
 > {
   contentRef = React.createRef<HTMLDivElement>();
+  private disableChapterBreakBeforeSetting =
+    ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
 
   constructor(props: SettingInfoProps) {
     super(props);
@@ -30,6 +33,8 @@ class SettingDialog extends React.Component<
     this.props.handleFetchPlugins();
     this.props.handleFetchDataSourceList();
     this.props.handleFetchDefaultSyncOption();
+    this.disableChapterBreakBeforeSetting =
+      ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
   }
 
   componentDidUpdate(prevProps: SettingInfoProps): void {
@@ -89,6 +94,36 @@ class SettingDialog extends React.Component<
         return "More settings";
       default:
         return "Setting";
+    }
+  };
+
+  notifyChapterBreakSettingChanged = () => {
+    const eventKey = "koodo-disable-chapter-break-changed-at";
+    const timestamp = Date.now().toString();
+    localStorage.setItem(eventKey, timestamp);
+    window.dispatchEvent(new CustomEvent(eventKey, { detail: timestamp }));
+
+    if (isElectron) {
+      try {
+        window.require("electron").ipcRenderer.invoke("reload-tab");
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  handleCloseSetting = () => {
+    const disableChapterBreakAfterSetting =
+      ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
+    const shouldReloadReaders =
+      disableChapterBreakAfterSetting !==
+      this.disableChapterBreakBeforeSetting;
+
+    this.props.handleSetting(false);
+    this.props.handleSettingMode("general");
+
+    if (shouldReloadReaders) {
+      this.notifyChapterBreakSettingChanged();
     }
   };
 
@@ -170,10 +205,7 @@ class SettingDialog extends React.Component<
 
           <div
             className="setting-close-container"
-            onClick={() => {
-              this.props.handleSetting(false);
-              this.props.handleSettingMode("general");
-            }}
+            onClick={this.handleCloseSetting}
           >
             <span className="icon-close setting-close"></span>
           </div>

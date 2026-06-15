@@ -62,17 +62,18 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           },
         }
   );
-  private disableChapterBreakBeforeSetting =
-    ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
-
   private reloadReaderForChapterBreakSetting = () => {
     if (this.props.currentBook?.key && this.props.renderBookFunc) {
       this.props.renderBookFunc();
     }
   };
 
-  private handleChapterBreakSettingStorage = (event: StorageEvent) => {
-    if (event.key === "koodo-disable-chapter-break-changed-at") {
+  private handleChapterBreakSettingStorage = (event: StorageEvent | Event) => {
+    if (
+      event.type === "koodo-disable-chapter-break-changed-at" ||
+      (event instanceof StorageEvent &&
+        event.key === "koodo-disable-chapter-break-changed-at")
+    ) {
       this.reloadReaderForChapterBreakSetting();
     }
   };
@@ -123,6 +124,10 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
       }, 100);
     });
     window.addEventListener("storage", this.handleChapterBreakSettingStorage);
+    window.addEventListener(
+      "koodo-disable-chapter-break-changed-at",
+      this.handleChapterBreakSettingStorage
+    );
   }
   async UNSAFE_componentWillMount() {
     let url = document.location.href;
@@ -164,31 +169,13 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     });
   }
 
-  componentDidUpdate(prevProps: ReaderProps) {
-    if (!prevProps.isSettingOpen && this.props.isSettingOpen) {
-      this.disableChapterBreakBeforeSetting =
-        ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
-    }
-
-    if (prevProps.isSettingOpen && !this.props.isSettingOpen) {
-      const disableChapterBreakAfterSetting =
-        ConfigService.getReaderConfig("isDisableChapterBreak") || "no";
-      if (
-        disableChapterBreakAfterSetting !==
-        this.disableChapterBreakBeforeSetting
-      ) {
-        this.reloadReaderForChapterBreakSetting();
-        localStorage.setItem(
-          "koodo-disable-chapter-break-changed-at",
-          Date.now().toString()
-        );
-      }
-    }
-  }
-
   componentWillUnmount() {
     window.removeEventListener(
       "storage",
+      this.handleChapterBreakSettingStorage
+    );
+    window.removeEventListener(
+      "koodo-disable-chapter-break-changed-at",
       this.handleChapterBreakSettingStorage
     );
     if (isElectron) {
