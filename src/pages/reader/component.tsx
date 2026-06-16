@@ -62,6 +62,40 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           },
         }
   );
+  private isReadingTimeActive = false;
+
+  private shouldCountReadingTime = () => {
+    return (
+      !document.hidden &&
+      document.visibilityState === "visible" &&
+      document.hasFocus()
+    );
+  };
+
+  private startReadingTime = (bookKey: string) => {
+    if (!bookKey || this.isReadingTimeActive || !this.shouldCountReadingTime()) {
+      return;
+    }
+    this.readingTimeUtil.start(bookKey);
+    this.isReadingTimeActive = true;
+  };
+
+  private stopReadingTime = () => {
+    if (!this.isReadingTimeActive) return;
+    this.readingTimeUtil.stop();
+    this.isReadingTimeActive = false;
+  };
+
+  private handleReadingTimeVisibilityChange = () => {
+    const bookKey = this.props.currentBook?.key;
+    if (!bookKey) return;
+    if (this.shouldCountReadingTime()) {
+      this.startReadingTime(bookKey);
+    } else {
+      this.stopReadingTime();
+    }
+  };
+
   private reloadReaderForChapterBreakSetting = () => {
     if (this.props.currentBook?.key && this.props.renderBookFunc) {
       this.props.renderBookFunc();
@@ -105,7 +139,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     // live reading-time values, but actual storage writes only happen when
     // a reading session ends (visibility hidden / blur / unmount).
     this.tickTimer = setInterval(() => {
-      if (!this.props.currentBook.key) return;
+      if (!this.props.currentBook.key || !this.shouldCountReadingTime()) return;
       this.setState((prev) => ({
         totalDuration: prev.totalDuration + 1,
         currentDuration: prev.currentDuration + 1,
@@ -128,6 +162,12 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
       "koodo-disable-chapter-break-changed-at",
       this.handleChapterBreakSettingStorage
     );
+    document.addEventListener(
+      "visibilitychange",
+      this.handleReadingTimeVisibilityChange
+    );
+    window.addEventListener("focus", this.handleReadingTimeVisibilityChange);
+    window.addEventListener("blur", this.handleReadingTimeVisibilityChange);
   }
   async UNSAFE_componentWillMount() {
     let url = document.location.href;
@@ -158,8 +198,8 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           : ConfigService.getReaderConfig("readerMode") || "double";
       this.props.handleReaderMode(readerMode);
       this.props.handleReadingBook(book);
-      // Start event-driven reading-time tracking
-      this.readingTimeUtil.start(book.key);
+      // Start event-driven reading-time tracking only while this reader is active.
+      this.startReadingTime(book.key);
       // Initialise UI duration from persisted total
       const savedTotal = this.readingTimeUtil.getTotalSeconds(book.key);
       this.setState({ totalDuration: savedTotal, currentDuration: 0 });
@@ -178,12 +218,18 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
       "koodo-disable-chapter-break-changed-at",
       this.handleChapterBreakSettingStorage
     );
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleReadingTimeVisibilityChange
+    );
+    window.removeEventListener("focus", this.handleReadingTimeVisibilityChange);
+    window.removeEventListener("blur", this.handleReadingTimeVisibilityChange);
     if (isElectron) {
       clearDiscordPresence();
     }
     clearInterval(this.tickTimer);
     // Flush any in-flight session time before the component tears down
-    this.readingTimeUtil.stop();
+    this.stopReadingTime();
   }
 
   handleEnterReader = (position: string) => {
