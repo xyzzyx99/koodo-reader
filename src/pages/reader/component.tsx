@@ -312,6 +312,33 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     });
   };
 
+  handleMiddleReaderWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    const pageArea = document.getElementById("page-area");
+    const iframe = pageArea?.getElementsByTagName("iframe")[0];
+    const iframeDoc = iframe?.contentDocument;
+    if (!iframeDoc) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    iframeDoc.dispatchEvent(
+      new WheelEvent("wheel", {
+        bubbles: true,
+        cancelable: true,
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+        deltaZ: event.deltaZ,
+        deltaMode: event.deltaMode,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        ctrlKey: event.ctrlKey,
+        shiftKey: event.shiftKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+      })
+    );
+  };
+
   handleLocation = () => {
     let position = this.props.htmlBook.rendition.getPosition();
 
@@ -734,6 +761,7 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           <div
             className="reader-middle-panel-close-area"
             onClick={this.handleMiddleReaderClick}
+            onWheel={this.handleMiddleReaderWheel}
             style={{
               left: this.state.isOpenLeftPanel ? 299 : 0,
               right: this.state.isOpenRightPanel ? 299 : 0,
