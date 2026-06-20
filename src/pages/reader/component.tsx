@@ -312,31 +312,63 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
     });
   };
 
-  handleMiddleReaderWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    const pageArea = document.getElementById("page-area");
-    const iframe = pageArea?.getElementsByTagName("iframe")[0];
-    const iframeDoc = iframe?.contentDocument;
-    if (!iframeDoc) return;
+  handleMiddleReaderWheel = async (event: React.WheelEvent<HTMLDivElement>) => {
+    const rendition = this.props.htmlBook?.rendition;
+    if (!rendition) return;
 
     event.preventDefault();
     event.stopPropagation();
 
-    iframeDoc.dispatchEvent(
-      new WheelEvent("wheel", {
-        bubbles: true,
-        cancelable: true,
-        deltaX: event.deltaX,
-        deltaY: event.deltaY,
-        deltaZ: event.deltaZ,
-        deltaMode: event.deltaMode,
-        clientX: event.clientX,
-        clientY: event.clientY,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey,
-        altKey: event.altKey,
-        metaKey: event.metaKey,
-      })
-    );
+    if (event.ctrlKey && this.props.readerMode !== "double") {
+      let scale = parseFloat(ConfigService.getReaderConfig("scale") || "1");
+      ConfigService.setReaderConfig(
+        "scale",
+        event.deltaY < 0 ? scale + 0.1 + "" : scale - 0.1 + ""
+      );
+      this.props.handleScale(ConfigService.getReaderConfig("scale") || "1");
+      this.props.renderBookFunc();
+      return;
+    }
+
+    if (lock) return;
+    lock = true;
+
+    if (this.props.readerMode === "scroll") {
+      const pageArea = document.getElementById("page-area");
+      if (pageArea) {
+        pageArea.scrollTop += event.deltaY;
+        pageArea.scrollLeft += event.deltaX;
+
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        await rendition.record();
+
+        if (
+          Math.abs(event.deltaX) === 0 &&
+          ConfigService.getReaderConfig("isDisableAutoScroll") !== "yes"
+        ) {
+          if (event.deltaY < 0 && pageArea.scrollTop === 0) {
+            await rendition.prev();
+          }
+          if (
+            event.deltaY > 0 &&
+            Math.abs(
+              pageArea.scrollTop + pageArea.clientHeight - pageArea.scrollHeight
+            ) < 10
+          ) {
+            await rendition.next();
+          }
+        }
+      }
+    } else if (Math.abs(event.deltaX) === 0) {
+      if (event.deltaY < 0) {
+        await rendition.prev();
+      } else if (event.deltaY > 0) {
+        await rendition.next();
+      }
+    }
+
+    this.handleLocation();
+    setTimeout(() => (lock = false), throttleTime);
   };
 
   handleLocation = () => {
