@@ -288,6 +288,30 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         break;
     }
   };
+
+  isLeftPanelClosable = () => {
+    return (
+      this.state.isOpenLeftPanel &&
+      !this.props.isNavLocked &&
+      ConfigService.getReaderConfig("isTempLocked") !== "yes"
+    );
+  };
+
+  isRightPanelClosable = () => {
+    return this.state.isOpenRightPanel && !this.props.isSettingLocked;
+  };
+
+  handleMiddleReaderClick = () => {
+    this.setState({
+      isOpenRightPanel: this.isRightPanelClosable()
+        ? false
+        : this.state.isOpenRightPanel,
+      isOpenLeftPanel: this.isLeftPanelClosable()
+        ? false
+        : this.state.isOpenLeftPanel,
+    });
+  };
+
   handleLocation = () => {
     let position = this.props.htmlBook.rendition.getPosition();
 
@@ -706,11 +730,18 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           <span className="icon-grid panel-icon"></span>
         </div>
 
+        {(this.isLeftPanelClosable() || this.isRightPanelClosable()) && (
+          <div
+            className="reader-middle-panel-close-area"
+            onClick={this.handleMiddleReaderClick}
+            style={{
+              left: this.state.isOpenLeftPanel ? 299 : 0,
+              right: this.state.isOpenRightPanel ? 299 : 0,
+            }}
+          />
+        )}
         <div
           className="setting-panel-container"
-          onMouseLeave={() => {
-            this.handleLeaveReader("right");
-          }}
           style={
             this.state.isOpenRightPanel
               ? {}
@@ -723,9 +754,6 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
         </div>
         <div
           className="navigation-panel-container"
-          onMouseLeave={() => {
-            this.handleLeaveReader("left");
-          }}
           style={
             this.state.isOpenLeftPanel
               ? {}
