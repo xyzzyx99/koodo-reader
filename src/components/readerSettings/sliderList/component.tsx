@@ -16,14 +16,28 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
       paraSpacing: ConfigService.getReaderConfig("paraSpacing") || "0",
       brightness: ConfigService.getReaderConfig("brightness") || "1",
       margin: ConfigService.getReaderConfig("margin") || "0",
+      fontSizeMax: ConfigService.getReaderConfig("fontSizeMax") || "40",
     };
   }
 
+  getEffectiveMaxValue = () => {
+    if (!this.props.item.adjustableMax) {
+      return this.props.item.maxValue;
+    }
+    const parsedMax = parseFloat(this.state.fontSizeMax || "40");
+    return Math.max(Number.isNaN(parsedMax) ? 40 : parsedMax, 1);
+  };
+
+  getEffectiveMinValue = () => {
+    const parsedMin = parseFloat(this.props.item.minValue);
+    const max = this.getEffectiveMaxValue();
+    return Math.min(Number.isNaN(parsedMin) ? 1 : parsedMin, max);
+  };
+
   getClampedValue = (rawValue: string) => {
-    const { minValue, maxValue } = this.props.item;
     const parsedValue = parseFloat(rawValue);
-    const min = parseFloat(minValue);
-    const max = parseFloat(maxValue);
+    const min = this.getEffectiveMinValue();
+    const max = this.getEffectiveMaxValue();
 
     if (Number.isNaN(parsedValue)) {
       return this.state[this.props.item.mode];
@@ -43,6 +57,62 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
     if (mode === "margin") {
       this.props.handleMargin(nextValue);
     }
+  };
+
+  getClampedFontSizeMax = (rawValue: string) => {
+    const parsedValue = parseInt(rawValue, 10);
+    if (Number.isNaN(parsedValue)) {
+      return this.state.fontSizeMax || "40";
+    }
+    return Math.max(parsedValue, 1).toString();
+  };
+
+  applyFontSizeMax = (rawValue: string) => {
+    const nextMaxValue = this.getClampedFontSizeMax(rawValue);
+    this.setState({ fontSizeMax: nextMaxValue } as any);
+    ConfigService.setReaderConfig("fontSizeMax", nextMaxValue);
+
+    if (parseFloat(this.state.fontSize) > parseFloat(nextMaxValue)) {
+      this.applyValue("fontSize", nextMaxValue);
+    }
+  };
+
+  renderMaxValue = () => {
+    if (!this.props.item.adjustableMax) {
+      return (
+        <span className="ultra-large-size" style={{ fontSize: "16px" }}>
+          {this.props.item.maxLabel}
+        </span>
+      );
+    }
+
+    return (
+      <input
+        className="slider-max-value-input"
+        value={this.state.fontSizeMax}
+        type="number"
+        min="1"
+        step="1"
+        title="Maximum font size"
+        onInput={(event: any) => {
+          this.setState({ fontSizeMax: event.target.value } as any);
+        }}
+        onChange={(event: any) => {
+          this.setState({ fontSizeMax: event.target.value } as any);
+        }}
+        onBlur={(event: any) => {
+          this.applyFontSizeMax(event.target.value);
+          this.handleRest("fontSize");
+        }}
+        onKeyDown={(event: any) => {
+          if (event.key === "Enter") {
+            this.applyFontSizeMax(event.target.value);
+            this.handleRest("fontSize");
+            event.currentTarget.blur();
+          }
+        }}
+      />
+    );
   };
 
   handleRest = async (mode) => {
@@ -139,8 +209,8 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
               className="input-progress"
               value={this.state[this.props.item.mode]}
               type="range"
-              max={this.props.item.maxValue}
-              min={this.props.item.minValue}
+              max={this.getEffectiveMaxValue()}
+              min={this.getEffectiveMinValue()}
               step={this.props.item.step}
               onInput={(event) => {
                 this.onValueChange(event, this.props.item.mode);
@@ -154,9 +224,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
               style={{ position: "absolute", bottom: "11px" }}
             />
           </div>
-          <span className="ultra-large-size" style={{ fontSize: "16px" }}>
-            {this.props.item.maxLabel}
-          </span>
+          {this.renderMaxValue()}
         </div>
       </div>
     );

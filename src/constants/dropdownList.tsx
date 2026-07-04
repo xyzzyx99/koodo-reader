@@ -203,13 +203,15 @@ export const wordFrequencyList = [
 export const sliderConfigs = [
   {
     maxValue: 40,
-    minValue: 13,
+    minValue: 1,
     mode: "fontSize",
-    minLabel: "13",
+    minLabel: "1",
     maxLabel: "40",
     step: 1,
     title: "Font size",
     isPDF: false,
+    adjustableMax: true,
+    maxConfigKey: "fontSizeMax",
   },
   {
     maxValue: 80,
