@@ -20,18 +20,24 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
     };
   }
 
+  getConfiguredMinValue = () => {
+    const parsedMin = parseFloat(this.props.item.minValue);
+    return Number.isNaN(parsedMin) ? 13 : parsedMin;
+  };
+
   getEffectiveMaxValue = () => {
     if (!this.props.item.adjustableMax) {
       return this.props.item.maxValue;
     }
     const parsedMax = parseFloat(this.state.fontSizeMax || "40");
-    return Math.max(Number.isNaN(parsedMax) ? 40 : parsedMax, 1);
+    return Math.max(
+      Number.isNaN(parsedMax) ? 40 : parsedMax,
+      this.getConfiguredMinValue()
+    );
   };
 
   getEffectiveMinValue = () => {
-    const parsedMin = parseFloat(this.props.item.minValue);
-    const max = this.getEffectiveMaxValue();
-    return Math.min(Number.isNaN(parsedMin) ? 1 : parsedMin, max);
+    return this.getConfiguredMinValue();
   };
 
   getClampedValue = (rawValue: string) => {
@@ -64,7 +70,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
     if (Number.isNaN(parsedValue)) {
       return this.state.fontSizeMax || "40";
     }
-    return Math.max(parsedValue, 1).toString();
+    return Math.max(parsedValue, this.getConfiguredMinValue()).toString();
   };
 
   applyFontSizeMax = (rawValue: string) => {
@@ -91,7 +97,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
         className="slider-max-value-input"
         value={this.state.fontSizeMax}
         type="number"
-        min="1"
+        min={this.getConfiguredMinValue()}
         step="1"
         title="Maximum font size"
         onInput={(event: any) => {
