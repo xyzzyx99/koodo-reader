@@ -208,7 +208,7 @@ class SliderList extends React.Component<SliderListProps, SliderListState> {
             {this.state[this.props.item.mode]}
           </span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-around" }}>
+        <div className="slider-value-row">
           <span className="ultra-small-size">{this.props.item.minLabel}</span>
           <div className="font-size-selector">
             <input

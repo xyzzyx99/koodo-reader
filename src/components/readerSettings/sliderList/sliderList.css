@@ -25,9 +25,12 @@
   text-align: left;
 }
 .font-size-selector {
-  width: 200px;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
   height: 28px;
   margin-left: 0px !important;
+  margin-right: 10px !important;
   position: relative;
 }
 
@@ -57,6 +60,22 @@
   height: 20px;
   border-radius: 5px;
 }
+.slider-value-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.slider-value-row .ultra-small-size,
+.slider-value-row .ultra-large-size,
+.slider-value-row .slider-max-value-input {
+  flex: 0 0 auto;
+}
+
+.font-size-selector .input-progress {
+  width: 100%;
+}
+
 .slider-max-value-input {
   width: 48px;
   height: 20px;
@@ -64,5 +83,5 @@
   font-size: 13px;
   line-height: 20px;
   position: relative;
-  margin-left: 8px;
+  margin-left: 0;
 }
